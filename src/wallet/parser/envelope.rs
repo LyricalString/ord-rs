@@ -138,6 +138,10 @@ impl RawEnvelope {
                         }),
                     ));
                 }
+                Some(Instruction::Op(opcodes::all::OP_IFDUP)) => {
+                    // OP_IFDUP is not allowed in inscriptions
+                    return Ok((false, None));
+                }
                 Some(Instruction::Op(opcodes::all::OP_PUSHNUM_NEG1)) => {
                     pushnum = true;
                     payload.push(vec![0x81]);
@@ -358,6 +362,25 @@ mod tests {
                 .collect(),
             output: Vec::new(),
         })
+    }
+
+    #[test]
+    fn envelope_should_detect_op66_opcode() {
+        // Create a script that includes OP_66
+        let script = ScriptBuilder::new()
+            .push_opcode(opcodes::OP_FALSE)
+            .push_opcode(opcodes::all::OP_IF)
+            .push_slice(b"ord")
+            .push_opcode(opcodes::all::OP_IFDUP) // OP_66
+            .push_slice(b"text/plain;charset=utf-8")
+            .push_opcode(opcodes::all::OP_ENDIF)
+            .push_opcode(opcodes::all::OP_ENDIF)
+            .into_script();
+
+        let parsed_envelopes =
+            parse_envelope(&[Witness::from_slice(&[script.into_bytes(), Vec::new()])]);
+
+        assert_eq!(parsed_envelopes.len(), 0);
     }
 
     #[test]

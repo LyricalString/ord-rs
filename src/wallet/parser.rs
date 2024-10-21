@@ -248,6 +248,20 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn ord_parser_should_not_parse_an_invalid_brc20_inscription_mainnet() {
+        let transaction = get_transaction_by_id(
+            "001b75397b34d34658a0b54236bfc024dfd6cb3fab9f05ffb75b17b16539631d",
+            bitcoin::Network::Bitcoin,
+        )
+        .await
+        .unwrap();
+
+        let inscriptions = OrdParser::parse_all(&transaction).unwrap();
+
+        assert_eq!(inscriptions.len(), 0);
+    }
+
+    #[tokio::test]
     async fn ord_parser_should_not_parse_a_non_brc20_inscription_testnet() {
         let transaction = get_transaction_by_id(
             "5b8ee749df4a3cfc37344892a97f1819fac80fb2432289a474dc0f0fd3711208",
